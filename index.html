@@ -37,49 +37,68 @@
     <div class="header-right">
       <!-- 表示モード切り替え -->
       <div class="mode-group" role="group" aria-label="表示モード">
-        <button id="btn-mode-split"  class="mode-btn active" data-mode="split"        title="分割表示 (デフォルト)" aria-pressed="true">
+        <button id="btn-mode-split"  class="mode-btn active" data-mode="split"
+          data-tip="分割表示" title="分割表示 (デフォルト)" aria-pressed="true">
           <span class="mode-icon">⬛⬛</span>
         </button>
-        <button id="btn-mode-editor" class="mode-btn"        data-mode="editor-only"  title="入力のみ表示" aria-pressed="false">
+        <button id="btn-mode-editor" class="mode-btn" data-mode="editor-only"
+          data-tip="入力のみ" title="入力のみ表示" aria-pressed="false">
           <span class="mode-icon">⬛</span>
         </button>
-        <button id="btn-mode-preview" class="mode-btn"       data-mode="preview-only" title="プレビューのみ表示" aria-pressed="false">
+        <button id="btn-mode-preview" class="mode-btn" data-mode="preview-only"
+          data-tip="プレビューのみ" title="プレビューのみ表示" aria-pressed="false">
           <span class="mode-icon preview-icon">⬛</span>
         </button>
       </div>
 
       <!-- フォントサイズ -->
       <div class="font-ctrl" aria-label="フォントサイズ調整">
-        <button id="btn-font-down" class="ctrl-btn" title="文字を小さく (Alt+-)">A<sup>-</sup></button>
-        <button id="btn-font-up"   class="ctrl-btn" title="文字を大きく (Alt++)">A<sup>+</sup></button>
+        <button id="btn-font-down" class="ctrl-btn" data-tip="文字サイズを小さく" title="文字を小さく (Alt+-)">A<sup>-</sup></button>
+        <button id="btn-font-up"   class="ctrl-btn" data-tip="文字サイズを大きく" title="文字を大きく (Alt++)">A<sup>+</sup></button>
       </div>
 
       <!-- エクスポート -->
       <div class="dropdown-wrap">
-        <button id="btn-export" class="ctrl-btn export-btn" aria-haspopup="true" aria-expanded="false" title="エクスポート">
+        <button id="btn-export" class="ctrl-btn export-btn" data-tip="書き出し・ダウンロード"
+          aria-haspopup="true" aria-expanded="false" title="エクスポート">
           Export <span class="chevron">▾</span>
         </button>
         <div id="export-menu" class="dropdown-menu" role="menu" hidden>
-          <button class="menu-item" data-action="copy-md"   role="menuitem">📋 MDコピー</button>
-          <button class="menu-item" data-action="copy-html" role="menuitem">📋 HTMLコピー</button>
+          <button class="menu-item" data-action="copy-md" role="menuitem">
+            📋 MDコピー
+            <span class="menu-item-sub">マークダウン形式でクリップボードへ</span>
+          </button>
+          <button class="menu-item" data-action="copy-html" role="menuitem">
+            📋 HTMLコピー
+            <span class="menu-item-sub">HTML形式でクリップボードへ</span>
+          </button>
           <hr class="menu-sep">
-          <button class="menu-item" data-action="dl-md"     role="menuitem">⬇ MD保存 (.md)</button>
-          <button class="menu-item" data-action="dl-html"   role="menuitem">⬇ HTML保存 (.html)</button>
+          <button class="menu-item" data-action="dl-md" role="menuitem">
+            ⬇ MD保存 (.md)
+            <span class="menu-item-sub">マークダウンファイルとして保存</span>
+          </button>
+          <button class="menu-item" data-action="dl-html" role="menuitem">
+            ⬇ HTML保存 (.html)
+            <span class="menu-item-sub">Webページ形式で保存</span>
+          </button>
         </div>
       </div>
 
       <!-- ドキュメント管理 -->
-      <button id="btn-docs" class="ctrl-btn" title="ドキュメント管理" aria-label="ドキュメント管理を開く">
+      <button id="btn-docs" class="ctrl-btn" data-tip="保存した文章を管理"
+        title="ドキュメント管理" aria-label="ドキュメント管理を開く">
         Docs
       </button>
 
       <!-- テーマ切り替え -->
-      <button id="btn-theme" class="ctrl-btn theme-btn" title="ダーク/ライト切り替え (Alt+T)" aria-label="テーマ切り替え">
+      <button id="btn-theme" class="ctrl-btn theme-btn" data-tip="ダーク/ライト切り替え"
+        title="ダーク/ライト切り替え (Alt+T)" aria-label="テーマ切り替え">
         🌙
       </button>
 
       <!-- チートシート -->
-      <button id="btn-help" class="ctrl-btn help-btn" title="マークダウン チートシート (Alt+H)" aria-label="チートシートを開く">
+      <button id="btn-help" class="ctrl-btn help-btn" data-tip="書き方一覧を見る"
+        title="マークダウン チートシート (Alt+H)" aria-label="チートシートを開く">
         ?
       </button>
     </div>
@@ -90,7 +109,10 @@
 
     <!-- 入力ペイン -->
     <div id="pane-editor" class="pane" role="region" aria-label="マークダウン入力エリア">
-      <div class="pane-label">Markdown</div>
+      <div class="pane-label">
+        Markdown
+        <span class="pane-label-sub">書式付き文章の記法</span>
+      </div>
       <div class="editor-wrap">
         <!-- overlay: シンタックスハイライト用 -->
         <div id="editor-hl" class="editor-hl" aria-hidden="true"></div>
@@ -113,7 +135,10 @@
 
     <!-- プレビューペイン -->
     <div id="pane-preview" class="pane" role="region" aria-label="プレビューエリア">
-      <div class="pane-label">Preview</div>
+      <div class="pane-label">
+        Preview
+        <span class="pane-label-sub">書式適用後の見た目</span>
+      </div>
       <div id="preview" class="preview markdown-body"></div>
     </div>
 
@@ -202,9 +227,18 @@
           <div class="cheat-section">
             <h3>拡張記法</h3>
             <table class="cheat-table">
-              <tr><td><code>```mermaid</code></td><td>フローチャート</td></tr>
-              <tr><td><code>$数式$</code></td><td>インライン数式</td></tr>
-              <tr><td><code>$$数式$$</code></td><td>ブロック数式</td></tr>
+              <tr>
+                <td><code>```mermaid</code></td>
+                <td>Mermaid<span class="cheat-sub">図・フローチャートを文字で書ける</span></td>
+              </tr>
+              <tr>
+                <td><code>$数式$</code></td>
+                <td>KaTeX<span class="cheat-sub">数式をきれいに表示（行内）</span></td>
+              </tr>
+              <tr>
+                <td><code>$$数式$$</code></td>
+                <td>KaTeX<span class="cheat-sub">数式をきれいに表示（独立行）</span></td>
+              </tr>
             </table>
           </div>
           <div class="cheat-section cheat-section--full">
