@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD Preview — シンプルで高機能なマークダウンエディタ</title>
+  <meta name="description" content="リアルタイムプレビュー・自動保存・複数ドキュメント対応。バニラJSのみで作ったマークダウンエディタ。">
+
+  <!-- highlight.js (コードブロックのシンタックスハイライト) -->
+  <link rel="stylesheet" id="hljs-theme-dark"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" id="hljs-theme-light"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+    disabled>
+
+  <!-- KaTeX (数式レンダリング) -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ========== ヘッダー ========== -->
+  <header class="header" role="banner">
+    <div class="header-left">
+      <div class="logo">MD<span class="logo-accent">Preview</span></div>
+      <div class="stats" aria-live="polite" aria-label="ドキュメント統計">
+        <span id="stat-chars" title="文字数">0文字</span>
+        <span class="stat-sep">·</span>
+        <span id="stat-words" title="単語数">0語</span>
+        <span class="stat-sep">·</span>
+        <span id="stat-read" title="読了時間">約0分</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- 表示モード切り替え -->
+      <div class="mode-group" role="group" aria-label="表示モード">
+        <button id="btn-mode-split"  class="mode-btn active" data-mode="split"        title="分割表示 (デフォルト)" aria-pressed="true">
+          <span class="mode-icon">⬛⬛</span>
+        </button>
+        <button id="btn-mode-editor" class="mode-btn"        data-mode="editor-only"  title="入力のみ表示" aria-pressed="false">
+          <span class="mode-icon">⬛</span>
+        </button>
+        <button id="btn-mode-preview" class="mode-btn"       data-mode="preview-only" title="プレビューのみ表示" aria-pressed="false">
+          <span class="mode-icon preview-icon">⬛</span>
+        </button>
+      </div>
+
+      <!-- フォントサイズ -->
+      <div class="font-ctrl" aria-label="フォントサイズ調整">
+        <button id="btn-font-down" class="ctrl-btn" title="文字を小さく (Alt+-)">A<sup>-</sup></button>
+        <button id="btn-font-up"   class="ctrl-btn" title="文字を大きく (Alt++)">A<sup>+</sup></button>
+      </div>
+
+      <!-- エクスポート -->
+      <div class="dropdown-wrap">
+        <button id="btn-export" class="ctrl-btn export-btn" aria-haspopup="true" aria-expanded="false" title="エクスポート">
+          Export <span class="chevron">▾</span>
+        </button>
+        <div id="export-menu" class="dropdown-menu" role="menu" hidden>
+          <button class="menu-item" data-action="copy-md"   role="menuitem">📋 MDコピー</button>
+          <button class="menu-item" data-action="copy-html" role="menuitem">📋 HTMLコピー</button>
+          <hr class="menu-sep">
+          <button class="menu-item" data-action="dl-md"     role="menuitem">⬇ MD保存 (.md)</button>
+          <button class="menu-item" data-action="dl-html"   role="menuitem">⬇ HTML保存 (.html)</button>
+        </div>
+      </div>
+
+      <!-- ドキュメント管理 -->
+      <button id="btn-docs" class="ctrl-btn" title="ドキュメント管理" aria-label="ドキュメント管理を開く">
+        Docs
+      </button>
+
+      <!-- テーマ切り替え -->
+      <button id="btn-theme" class="ctrl-btn theme-btn" title="ダーク/ライト切り替え (Alt+T)" aria-label="テーマ切り替え">
+        🌙
+      </button>
+
+      <!-- チートシート -->
+      <button id="btn-help" class="ctrl-btn help-btn" title="マークダウン チートシート (Alt+H)" aria-label="チートシートを開く">
+        ?
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== メインエリア ========== -->
+  <main class="main" id="main" role="main">
+
+    <!-- 入力ペイン -->
+    <div id="pane-editor" class="pane" role="region" aria-label="マークダウン入力エリア">
+      <div class="pane-label">Markdown</div>
+      <div class="editor-wrap">
+        <!-- overlay: シンタックスハイライト用 -->
+        <div id="editor-hl" class="editor-hl" aria-hidden="true"></div>
+        <!-- 実際の入力 -->
+        <textarea
+          id="editor"
+          class="editor"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          placeholder="# ここから書き始める&#10;&#10;マークダウンを入力するとリアルタイムでプレビューされます。&#10;&#10;**Ctrl+B** で太字、**Ctrl+I** で斜体、**?** でチートシートを表示。"
+          aria-label="マークダウン入力"
+          aria-multiline="true"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- リサイザー -->
+    <div id="resizer" class="resizer" role="separator" aria-orientation="vertical" aria-label="ペイン幅調整"></div>
+
+    <!-- プレビューペイン -->
+    <div id="pane-preview" class="pane" role="region" aria-label="プレビューエリア">
+      <div class="pane-label">Preview</div>
+      <div id="preview" class="preview markdown-body"></div>
+    </div>
+
+  </main>
+
+  <!-- ========== ドキュメント管理モーダル ========== -->
+  <div id="modal-docs" class="modal" role="dialog" aria-modal="true" aria-labelledby="docs-title" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="docs-title">ドキュメント</h2>
+        <button class="modal-close" data-close="modal-docs" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body">
+        <button id="btn-new-doc" class="btn-primary">＋ 新規ドキュメント</button>
+        <ul id="docs-list" class="docs-list" role="listbox" aria-label="ドキュメント一覧"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== チートシートモーダル ========== -->
+  <div id="modal-help" class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+    <div class="modal-card modal-card--wide">
+      <div class="modal-header">
+        <h2 id="help-title">マークダウン チートシート</h2>
+        <button class="modal-close" data-close="modal-help" aria-label="閉じる">✕</button>
+      </div>
+      <div class="modal-body cheatsheet">
+        <div class="cheat-grid">
+          <div class="cheat-section">
+            <h3>見出し</h3>
+            <table class="cheat-table">
+              <tr><td><code># 見出し1</code></td><td>h1</td></tr>
+              <tr><td><code>## 見出し2</code></td><td>h2</td></tr>
+              <tr><td><code>### 見出し3</code></td><td>h3</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>テキスト装飾</h3>
+            <table class="cheat-table">
+              <tr><td><code>**太字**</code></td><td><strong>太字</strong></td></tr>
+              <tr><td><code>*斜体*</code></td><td><em>斜体</em></td></tr>
+              <tr><td><code>~~打ち消し~~</code></td><td><s>打ち消し</s></td></tr>
+              <tr><td><code>`インラインコード`</code></td><td><code>コード</code></td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>リスト</h3>
+            <table class="cheat-table">
+              <tr><td><code>- 項目</code></td><td>箇条書き</td></tr>
+              <tr><td><code>1. 項目</code></td><td>番号付き</td></tr>
+              <tr><td><code>- [ ] タスク</code></td><td>チェックボックス</td></tr>
+              <tr><td><code>- [x] 完了</code></td><td>チェック済み</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>リンク・画像</h3>
+            <table class="cheat-table">
+              <tr><td><code>[テキスト](URL)</code></td><td>リンク</td></tr>
+              <tr><td><code>![alt](URL)</code></td><td>画像</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>ブロック要素</h3>
+            <table class="cheat-table">
+              <tr><td><code>&gt; 引用</code></td><td>ブロック引用</td></tr>
+              <tr><td><code>---</code></td><td>水平線</td></tr>
+              <tr><td><code>[^1]: 注記</code></td><td>脚注</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>コードブロック</h3>
+            <table class="cheat-table">
+              <tr><td><code>```js</code></td><td>JavaScript</td></tr>
+              <tr><td><code>```py</code></td><td>Python</td></tr>
+              <tr><td><code>```bash</code></td><td>Bash</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>テーブル</h3>
+            <table class="cheat-table">
+              <tr><td><pre class="cheat-pre">| A | B |
+|---|---|
+| 1 | 2 |</pre></td><td>テーブル</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section">
+            <h3>拡張記法</h3>
+            <table class="cheat-table">
+              <tr><td><code>```mermaid</code></td><td>フローチャート</td></tr>
+              <tr><td><code>$数式$</code></td><td>インライン数式</td></tr>
+              <tr><td><code>$$数式$$</code></td><td>ブロック数式</td></tr>
+            </table>
+          </div>
+          <div class="cheat-section cheat-section--full">
+            <h3>キーボードショートカット</h3>
+            <table class="cheat-table cheat-table--shortcuts">
+              <tr><td><kbd>Ctrl+B</kbd></td><td>太字</td>
+                  <td><kbd>Ctrl+I</kbd></td><td>斜体</td></tr>
+              <tr><td><kbd>Ctrl+K</kbd></td><td>リンク挿入</td>
+                  <td><kbd>Ctrl+Shift+C</kbd></td><td>コードブロック</td></tr>
+              <tr><td><kbd>Tab</kbd></td><td>インデント</td>
+                  <td><kbd>Shift+Tab</kbd></td><td>アンインデント</td></tr>
+              <tr><td><kbd>Alt+T</kbd></td><td>テーマ切り替え</td>
+                  <td><kbd>Alt+H</kbd></td><td>チートシート</td></tr>
+              <tr><td><kbd>Alt++</kbd></td><td>文字大きく</td>
+                  <td><kbd>Alt+-</kbd></td><td>文字小さく</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== トースト通知 ========== -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ========== CDN ライブラリ（順序依存あり） ========== -->
+  <!-- marked.js: マークダウンパーサー -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <!-- highlight.js: コードブロックのシンタックスハイライト -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <!-- KaTeX: 数式レンダリング -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+  <!-- Mermaid: フローチャート描画 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
